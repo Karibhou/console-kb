@@ -98,6 +98,27 @@ describe('workflow-failure-notify.mjs CLI', () => {
     expect(result.stdout).toBe('\n')
   })
 
+  it('failed-jobs: logs the swallowed gh failure to stderr instead of leaving no trace', () => {
+    // The stdout line ('\n') is indistinguishable from "no failed jobs",
+    // so this failure must be visible somewhere else: a structured stderr
+    // log line, matching every other script's createLogger('...') usage.
+    const result = runScript('failed-jobs', {
+      REPOSITORY: 'kubestellar/console-kb',
+      RUN_ID: '0',
+      PATH: `${fakeGhDir()}:${process.env.PATH}`,
+    })
+    expect(result.status).toBe(0)
+    const logLine = result.stderr
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line))
+      .find((entry) => entry.component === 'workflow-failure-notify')
+    expect(logLine).toBeDefined()
+    expect(logLine.level).toBe('warn')
+    expect(logLine.repository).toBe('kubestellar/console-kb')
+    expect(logLine.runId).toBe('0')
+  })
+
   it('failed-jobs: exits 1 when REPOSITORY is missing', () => {
     const result = runScript('failed-jobs', { REPOSITORY: '', RUN_ID: '0' })
     expect(result.status).toBe(1)

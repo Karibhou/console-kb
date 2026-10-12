@@ -38,6 +38,9 @@ import {
   renderIssueBody,
   joinFailedJobNames,
 } from './lib/workflow-failure-notify.mjs'
+import { createLogger } from './lib/logger.mjs'
+
+const log = createLogger('workflow-failure-notify')
 
 function requireEnv(name, env) {
   const value = env[name]
@@ -98,8 +101,19 @@ export function main(mode, env = process.env) {
         )
         const { jobs } = JSON.parse(jobsJson)
         process.stdout.write(`${joinFailedJobNames(jobs)}\n`)
-      } catch {
+      } catch (e) {
         // Swallow-on-error: matches the bash original's `2>/dev/null || echo ""`.
+        // The empty stdout line is indistinguishable from "no failed jobs",
+        // so a `gh run view` failure (auth, rate limit, API outage) here
+        // previously left no trace anywhere. Log it to stderr (stdout is
+        // the only thing callers capture via `$(...)`, see
+        // .github/workflows/scheduled-workflow-failure-issue.yml) so a
+        // real lookup failure is at least visible in the raw job log.
+        log.warn('failed-jobs lookup failed; swallowing and reporting no failed jobs', {
+          repository,
+          runId,
+          error: e?.message || String(e),
+        })
         process.stdout.write('\n')
       }
       return 0
