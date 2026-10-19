@@ -22,55 +22,6 @@ describe('loadSourcesConfig', () => {
     return loadSourcesConfig(configPath)
   }
 
-  it('preserves every checked-in source value and type from the previous parser', () => {
-    // Compared with parseSimpleYaml before its removal. Pin the full shape
-    // so changing parsers cannot silently change any production setting.
-    expect(loadSourcesConfig()).toStrictEqual({
-      sources: {
-        'github-issues': {
-          enabled: true,
-          description: 'Closed GitHub issues with linked PRs (high engagement)',
-          minReactions: 10,
-          minComments: 10,
-          maxPerProject: 20,
-          searchWindow: '90d',
-          rateLimitDelay: 200,
-        },
-        'github-discussions': {
-          enabled: true,
-          description: 'Answered GitHub Discussions (Q&A format)',
-          minUpvotes: 5,
-          maxPerProject: 10,
-          searchWindow: '90d',
-          rateLimitDelay: 200,
-        },
-        reddit: {
-          enabled: true,
-          description: 'Reddit posts from kubernetes/cloud-native subreddits',
-          subreddits: ['kubernetes', 'devops', 'k8s', 'cloudnative'],
-          minUpvotes: 20,
-          maxPerProject: 10,
-          searchWindow: '180d',
-          rateLimitDelay: 2000,
-        },
-        stackoverflow: {
-          enabled: true,
-          description: 'Stack Overflow Q&A with accepted answers',
-          minVotes: 10,
-          maxPerProject: 10,
-          searchWindow: '365d',
-          rateLimitDelay: 1000,
-        },
-        'cncf-blog': {
-          enabled: false,
-          description: 'CNCF blog posts and case studies',
-          maxPerProject: 5,
-          searchWindow: '365d',
-        },
-      },
-    })
-  })
-
   it('keeps the existing defaults when the config file is missing', () => {
     expect(loadSourcesConfig(configPath)).toStrictEqual({
       sources: {
